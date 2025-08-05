@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>04e109aa-e220-4864-8b52-bc85a75055d6</groupId>
-	<artifactId>student-report-service</artifactId>
+	<artifactId>student-report-service-runtime</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>mule-application</packaging>
 
-	<name>student-report-service</name>
+	<name>student-report-service-runtime</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -43,7 +43,7 @@
 	<anypoint.platform.client_id>${ANYPOINT_CLIENT_ID}</anypoint.platform.client_id>
 	<anypoint.platform.client_secret>${ANYPOINT_CLIENT_SECRET}</anypoint.platform.client_secret>
 	</properties>
-	<applicationName>student-report-service</applicationName>
+	<applicationName>student-report-service-runtime</applicationName>
 	<replicas>1</replicas>
 	<vCores>0.1</vCores>
 	<skipDeploymentVerification>${skipDeploymentVerification}</skipDeploymentVerification>
