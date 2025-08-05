@@ -15,7 +15,7 @@ http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sft
 http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
 	<http:listener-config name="student-report-service-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8083" />
+        <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
     <apikit:config name="student-report-service-config" api="resource::04e109aa-e220-4864-8b52-bc85a75055d6:student-report-service:1.0.2:raml:zip:student-report-service.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
 	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="1c59c3a2-55a1-48bc-a0d8-e25666b2fad7" >
