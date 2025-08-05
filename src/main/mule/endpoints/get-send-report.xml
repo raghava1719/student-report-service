@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	
+	<flow name="get:\send-report\(ID):student-report-service-config" doc:id="4cd161b8-d062-450d-a48e-f9d366d1849a" >
+		<http:request method="GET" doc:name="Request" doc:id="40729eee-a2e1-41d9-bfd1-47c33e6d6164" path="/student/{ID}" target="student" config-ref="HTTP_Request_configuration">
+			<http:uri-params ><![CDATA[#[{
+	ID :attributes.uriParams.ID
+}]]]></http:uri-params>
+		</http:request>
+		<validation:is-not-null doc:name="Is not null" doc:id="9502a792-3c39-48af-890a-1085f76ece12" value="#[vars.student.report_file_path]" config-ref="Validation_Config" message='Report card is not created yet.'/>
+		<sftp:read doc:name="Read" doc:id="8734bbab-003f-4bb2-a01c-21eef9522d2c" config-ref="SFTP_Config" path="#[vars.student.report_file_path]" outputMimeType="application/octet-stream">
+			<reconnect />
+		</sftp:read>
+		<ee:transform doc:name="Transform Message" doc:id="65959a5a-8870-47ad-9caf-9c1c2375e4fc" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="reportAttachment" ><![CDATA[%dw 2.0
+output application/json
+import dw::core::Binaries
+import fromBase64 from dw::core::Binaries
+---
+{
+  	(attributes.fileName):fromBase64(Binaries::toBase64(payload)) 
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<async doc:name="Async" doc:id="ddbc429b-051c-4ddd-8cc8-0e33887c1888" >
+			<email:send doc:name="Send" doc:id="4ef29441-3b65-4c54-9a3a-fe88748e3a21" config-ref="Email_SMTP" subject="this is report" fromAddress="nraghava156@gmail.com">
+			<reconnect />
+			<email:to-addresses>
+				<email:to-address value="#[vars.student.email]" />
+			</email:to-addresses>
+			<email:body contentType="text/pain">
+				<email:content><![CDATA["Please find the student report attached."]]></email:content>
+			</email:body>
+			<email:attachments><![CDATA[#[vars.reportAttachment]]]></email:attachments>
+		</email:send>
+			<http:request method="DELETE" doc:name="Request" doc:id="f3fc28f2-9160-4dab-8630-3780c899f048" config-ref="HTTP_Request_configuration" path="/student/{id}">
+				<http:uri-params ><![CDATA[#[{
+	"id" : vars.student.id
+}]]]></http:uri-params>
+			</http:request>
+		</async>
+		<ee:transform doc:name="Transform Message" doc:id="a061d561-cc29-4603-8a26-b02015227881" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Report card sent to email: "++ vars.student.email ++ "."
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1bce96ac-d139-4c1a-8723-e4b85b6f7fe9" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY, HTTP:CONNECTIVITY, HTTP:FORBIDDEN, HTTP:INTERNAL_SERVER_ERROR, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:SERVICE_UNAVAILABLE, HTTP:TIMEOUT, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE">
+				<ee:transform doc:name="Transform Message" doc:id="d63989ea-a6fa-45c6-8ca2-4e9740ba2781" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var timestamp = now() as String { format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ" }	
+---
+error.errorMessage.payload default {
+	statusCode: 500,
+            error: error.errorType.identifier,
+            errorMessage: error.description,
+            correlationId: correlationId,
+            timestamp: timestamp
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="32ebf3bb-47b0-45ce-9ea4-b701ee00d5c1" type="VALIDATION:NULL">
+				<ee:transform doc:name="Transform Message" doc:id="3676c618-052f-4ae5-a21e-65de88077148" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var timestamp = now() as String { format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ" }	
+---
+{
+	statusCode: 400,
+            errorMessage: error.description,
+            correlationId: correlationId,
+            timestamp: timestamp
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="70d6664b-d11c-4442-b790-bba2b4e03840" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="42fa2210-58f6-44ac-be81-ddc557bb1239">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var timestamp = now() as String { format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ" }	
+---
+error.errorMessage.payload default {
+	statusCode: 500,
+            error: error.errorType.identifier,
+            errorMessage: error.description,
+            correlationId: correlationId,
+            timestamp: timestamp
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

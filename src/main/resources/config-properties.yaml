@@ -1,0 +1,5 @@
+sftp:
+  hostname: "ap-southeast-1.sftpcloud.io"
+  username: "![bu1w+LkI8DYEFPdY0MijvPI/htOA0EvYJP2gFy+xeSPEMKUFhDA7SA==]"
+  password: "![HtxHnGrbK4kxRQmjt4DZ19h44OpYB8itumodx0xmt+AvpUEXklS+Sw==]"
+  port: "22"
