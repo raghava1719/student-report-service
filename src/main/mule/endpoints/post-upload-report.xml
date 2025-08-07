@@ -6,7 +6,7 @@
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
 	<flow name="post:\upload-report:multipart\form-data:student-report-service-config" doc:id="8dd5f4fc-7311-4a2f-8774-d162788874f8" >
-		<logger level="INFO" doc:name="Logger" doc:id="749bd402-d756-4940-a0df-0e1a5c3fd229" message='#["Request received to student-report-service with co-relation id "++ correlationId  ++ "to upload report card in SFTP server at "++(payload.parts.fileName.content)]' />
+		<logger level="INFO" doc:name="Logger" doc:id="749bd402-d756-4940-a0df-0e1a5c3fd229" message='#["Request received to student-report-service."]' />
 		<ee:transform doc:name="Transform Message" doc:id="db076093-5c5b-46c2-b366-fdfb54f8704e" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
