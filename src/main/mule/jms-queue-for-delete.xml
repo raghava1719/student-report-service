@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="jms-queue-for-deleteFlow" doc:id="47631375-9cfd-4e11-b649-18d46c2381bc" >
+		<jms:listener doc:name="On New Message" doc:id="cbd56e96-2e5e-413c-a1bb-bc989ceba314" config-ref="JMS_Config" destination="/del-queue" ackMode="AUTO" numberOfConsumers="1">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="cf419457-b246-4760-aac1-0fe2b2213061" message='#["request received to delete : "++ payload.id]'/>
+		<http:request method="DELETE" doc:name="Request" doc:id="976a2887-9f19-4e20-908c-fe6dd42d58e4" config-ref="HTTP_Request_configuration" path="/students/{id}" target="result">
+			<http:uri-params ><![CDATA[#[{
+	id : payload.id
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="b76d94c5-b1e4-4fb6-810b-e644eda9880d" message='#["student with id : " ++ payload.id ++ " deleted from database."]'/>
+	</flow>
+</mule>
