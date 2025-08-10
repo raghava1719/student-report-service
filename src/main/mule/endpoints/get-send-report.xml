@@ -21,7 +21,7 @@ http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/cu
 	id :attributes.uriParams.ID
 }]]]></http:query-params>
 		</http:request>
-		<validation:is-not-null doc:name="Is not null" doc:id="9502a792-3c39-48af-890a-1085f76ece12" value="#[vars.student.report_file_path]" config-ref="Validation_Config" message='Report card is not generated.'/>
+		<validation:is-true doc:name="Is true" doc:id="076bf777-d155-4cbd-b661-b848a3389bd1" config-ref="Validation_Config" expression='#[vars.student.report_file_path != "-"]'/>
 		<sftp:read doc:name="Read" doc:id="8734bbab-003f-4bb2-a01c-21eef9522d2c" config-ref="SFTP_Config" path="#[vars.student.report_file_path]" outputMimeType="application/octet-stream">
 			<reconnect />
 		</sftp:read>
@@ -77,17 +77,15 @@ output application/json
 var timestamp = now() as String { format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ" }	
 ---
 error.errorMessage.payload default {
-	statusCode: 500,
+			statusCode: 500,
             error: error.errorType.identifier,
-            errorMessage: error.description,
-            correlationId: correlationId,
-            timestamp: timestamp
+            errorMessage: error.description
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</on-error-continue>
-			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="32ebf3bb-47b0-45ce-9ea4-b701ee00d5c1" type="VALIDATION:NULL">
-				<logger level="INFO" doc:name="Logger" doc:id="a50dd705-ba6c-4684-aba4-266bb9988d1a" message='#["No student found with id "++ attributes.uriParams.ID]'/>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="32ebf3bb-47b0-45ce-9ea4-b701ee00d5c1" type="VALIDATION:INVALID_BOOLEAN">
+				<logger level="INFO" doc:name="Logger" doc:id="a50dd705-ba6c-4684-aba4-266bb9988d1a" message='#["No report card creatd for student found with id "++ attributes.uriParams.ID]'/>
 				<ee:transform doc:name="Transform Message" doc:id="3676c618-052f-4ae5-a21e-65de88077148" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
@@ -95,10 +93,8 @@ output application/json
 var timestamp = now() as String { format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ" }	
 ---
 {
-			statusCode: 400,
-            errorMessage: error.description,
-            correlationId: correlationId,
-            timestamp: timestamp
+			statusCode: 404,
+            errorMessage: "No report card creatd for student found with id "++ attributes.uriParams.ID,
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
@@ -114,8 +110,6 @@ error.errorMessage.payload default {
 	statusCode: 500,
             error: error.errorType.identifier,
             errorMessage: error.description,
-            correlationId: correlationId,
-            timestamp: timestamp
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>

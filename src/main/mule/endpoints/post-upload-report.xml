@@ -7,7 +7,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
 	<flow name="post:\upload-report:multipart\form-data:student-report-service-config" doc:id="8dd5f4fc-7311-4a2f-8774-d162788874f8" >
 		<logger level="INFO" doc:name="Logger" doc:id="749bd402-d756-4940-a0df-0e1a5c3fd229" message='#["Request received to student-report-service."]' />
-		<ee:transform doc:name="Transform Message" doc:id="db076093-5c5b-46c2-b366-fdfb54f8704e" >
+		<ee:transform doc:name="convert inot csv file" doc:id="db076093-5c5b-46c2-b366-fdfb54f8704e" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/csv
@@ -18,10 +18,12 @@ payload.parts.file.content]]></ee:set-payload>
 				<ee:set-variable variableName="fileName" ><![CDATA[payload.parts.fileName.content]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<sftp:write doc:name="Write" doc:id="6c097fa3-652c-4dd4-a683-609f039a3052" config-ref="SFTP_Config" path='#[vars.fileName]' >
+		<until-successful maxRetries="2" doc:name="Until Successful" doc:id="20fd7b6f-bece-4264-bd50-91b53ab46d5a" millisBetweenRetries="1000">
+			<sftp:write doc:name="upload in SFTP server" doc:id="6c097fa3-652c-4dd4-a683-609f039a3052" config-ref="SFTP_Config" path="#[vars.fileName]">
 			<reconnect />
 		</sftp:write>
-		<ee:transform doc:name="Transform Message" doc:id="3e75a818-7da0-4c19-952e-297a6685f313" >
+		</until-successful>
+		<ee:transform doc:name="set output payload" doc:id="3e75a818-7da0-4c19-952e-297a6685f313" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -34,7 +36,7 @@ output application/json
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="af05f49c-0aca-4708-9601-2433b2db84e7" message='#["Request sent from student-report-service with co-relation id "++ correlationId  ++ "after uploading report card in SFTP server at "]' />
 		<error-handler>
-  <on-error-propagate type="SFTP:ACCESS_DENIED">
+  <on-error-continue type="SFTP:ACCESS_DENIED">
     <ee:transform>
       <ee:message>
         <ee:set-payload><![CDATA[%dw 2.0
@@ -51,9 +53,9 @@ output application/json
         ]]></ee:set-payload>
       </ee:message>
     </ee:transform>
-  </on-error-propagate>
+  </on-error-continue>
 
-  <on-error-propagate type="EXPRESSION">
+  <on-error-continue type="EXPRESSION">
     <ee:transform>
       <ee:message>
         <ee:set-payload><![CDATA[%dw 2.0
@@ -70,8 +72,8 @@ output application/json
         ]]></ee:set-payload>
       </ee:message>
     </ee:transform>
-  </on-error-propagate>
-			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="24cf2c87-15e7-4875-931d-68028d1a2a3b" type="ANY">
+  </on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error continue" doc:id="24cf2c87-15e7-4875-931d-68028d1a2a3b" type="ANY">
 				<ee:transform doc:name="Transform Message" doc:id="b72fb717-475c-4b54-a1d7-f9c6921a4845" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
@@ -88,7 +90,7 @@ output application/json
         ]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
-			</on-error-propagate>
+			</on-error-continue>
 
 </error-handler>
 
